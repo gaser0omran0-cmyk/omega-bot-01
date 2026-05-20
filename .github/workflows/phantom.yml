@@ -6,13 +6,30 @@ on:
 jobs:
   mission:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install cryptography playwright --quiet
-      - run: python awaken.py
+      - name: Install system dependencies (all browsers)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libnss3 libnspr4 libatk-bridge2.0-0 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 \
+            libgbm1 libpango-1.0-0 libasound2t64 \
+            libxshmfence1 libglu1-mesa libgtk-3-0 \
+            libwoff1 libgstreamer-gl1.0-0 libgstreamer-plugins-bad1.0-0 \
+            libenchant-2-2 libsecret-1-0 libhyphen0 libmanette-0.2-0 \
+            libegl1 libopengl0 libxslt1.1 libevent-2.1-7 \
+            libgles2 libvpx9 libflite1 libicu74
+      - name: Install Python packages
+        run: pip install cryptography playwright --quiet
+      - name: Install ALL browsers (Chromium + Firefox + WebKit)
+        run: python -m playwright install --with-deps
+      - name: Execute Phantom
         env:
           ENC_KEY: ${{ secrets.ENC_KEY }}
           PAYLOAD_BIN: ${{ secrets.PAYLOAD_BIN }}
+        run: python awaken.py
